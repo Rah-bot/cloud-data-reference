@@ -10,6 +10,3 @@ Three reference implementations covering the full data-architect remit:
 
 Each directory is self-contained — its own README, docker-compose, CI, and tests.
 
-## Why these three?
-
-Modern data architecture sits at the intersection of **modeling** (lakehouse), **pipelines** (streaming), and **governance** (compliance). Most portfolios cover one. These cover all three at production grade.
