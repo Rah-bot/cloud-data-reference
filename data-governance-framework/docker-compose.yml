@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: openmetadata
+      POSTGRES_PASSWORD: openmetadata
+      POSTGRES_DB: openmetadata
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  elasticsearch:
+    image: elasticsearch:8.10.2
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+
+  openmetadata-server:
+    image: openmetadata/server:1.3.0
+    depends_on: [postgres, elasticsearch]
+    environment:
+      DB_DRIVER_CLASS: org.postgresql.Driver
+      DB_SCHEME: postgresql
+      DB_HOST: postgres
+      DB_USER: openmetadata
+      DB_USER_PASSWORD: openmetadata
+      DB_NAME: openmetadata
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+    ports:
+      - "8585:8585"
+
+  airflow:
+    image: apache/airflow:2.8.1
+    depends_on: [postgres]
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://openmetadata:openmetadata@postgres/openmetadata
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./quality:/opt/airflow/quality
+      - ./classification:/opt/airflow/classification
+    ports:
+      - "8080:8080"
+    command: standalone
+
+volumes:
+  pg_data:

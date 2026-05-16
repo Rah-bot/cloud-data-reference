@@ -1,0 +1,45 @@
+{
+  "expectation_suite_name": "patient_visits_suite",
+  "meta": {
+    "domain": "clinical",
+    "sensitivity": "PHI",
+    "purpose": "Block promotion of clinical data when integrity is suspect"
+  },
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "mrn"}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "visit_id"}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "kwargs": {"column": "visit_id"}
+    },
+    {
+      "expectation_type": "expect_column_values_to_match_regex",
+      "kwargs": {"column": "mrn", "regex": "^MRN-\\d{7,}$"}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {"column": "age", "min_value": 0, "max_value": 130}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "visit_type",
+        "value_set": ["inpatient", "outpatient", "emergency", "telehealth"]
+      }
+    },
+    {
+      "expectation_type": "expect_column_pair_values_a_to_be_greater_than_b",
+      "kwargs": {"column_A": "discharge_ts", "column_B": "admission_ts", "or_equal": true}
+    },
+    {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "kwargs": {"min_value": 100}
+    }
+  ]
+}

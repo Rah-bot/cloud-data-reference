@@ -1,0 +1,95 @@
+# PII / PHI / PCI pattern library used by classification/classify.py.
+#
+# Each entry:
+#   name:        canonical tag, applied verbatim in the catalog
+#   sensitivity: one of [PII, PHI, PCI]
+#   patterns:    list of regexes; a match on column-name OR sample values flags the column
+#   sample_rule: optional — when present, a fraction of sampled values must match for a column-level hit
+#   notes:       free-text justification
+
+categories:
+  - name: email
+    sensitivity: PII
+    patterns:
+      - "(?i).*email.*"
+      - "(?i).*e_mail.*"
+    sample_rule:
+      regex: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+      min_match_fraction: 0.7
+    notes: Standard email format. Direct identifier.
+
+  - name: ssn
+    sensitivity: PII
+    patterns:
+      - "(?i).*ssn.*"
+      - "(?i).*social_?security.*"
+    sample_rule:
+      regex: "^\\d{3}-?\\d{2}-?\\d{4}$"
+      min_match_fraction: 0.8
+    notes: US Social Security Number.
+
+  - name: phone
+    sensitivity: PII
+    patterns:
+      - "(?i).*phone.*"
+      - "(?i).*mobile.*"
+      - "(?i).*tel(_?num)?.*"
+    sample_rule:
+      regex: "^\\+?\\d[\\d\\s()-]{6,}$"
+      min_match_fraction: 0.7
+
+  - name: full_name
+    sensitivity: PII
+    patterns:
+      - "(?i).*first_?name.*"
+      - "(?i).*last_?name.*"
+      - "(?i).*full_?name.*"
+      - "(?i)^name$"
+
+  - name: address
+    sensitivity: PII
+    patterns:
+      - "(?i).*address.*"
+      - "(?i).*street.*"
+      - "(?i).*postal_?code.*"
+      - "(?i).*zip(_?code)?.*"
+
+  - name: dob
+    sensitivity: PII
+    patterns:
+      - "(?i).*dob.*"
+      - "(?i).*date_?of_?birth.*"
+      - "(?i).*birth_?date.*"
+
+  - name: mrn
+    sensitivity: PHI
+    patterns:
+      - "(?i).*mrn.*"
+      - "(?i).*medical_?record.*"
+      - "(?i).*patient_?id.*"
+    notes: Medical Record Number. PHI under HIPAA.
+
+  - name: diagnosis
+    sensitivity: PHI
+    patterns:
+      - "(?i).*diagnos.*"
+      - "(?i).*icd(_?\\d+)?_?code.*"
+
+  - name: credit_card
+    sensitivity: PCI
+    patterns:
+      - "(?i).*card_?num.*"
+      - "(?i).*credit_?card.*"
+      - "(?i).*pan$"
+    sample_rule:
+      regex: "^\\d{13,19}$"
+      min_match_fraction: 0.8
+    notes: Card numbers. PCI-DSS scope.
+
+  - name: iban
+    sensitivity: PCI
+    patterns:
+      - "(?i).*iban.*"
+    sample_rule:
+      regex: "^[A-Z]{2}\\d{2}[A-Z0-9]{1,30}$"
+      min_match_fraction: 0.8

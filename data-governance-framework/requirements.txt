@@ -1,0 +1,7 @@
+pyyaml==6.0.1
+requests==2.31.0
+snowflake-connector-python==3.6.0
+great-expectations==0.18.8
+apache-airflow==2.8.1
+pytest==7.4.4
+ruff==0.1.14

@@ -1,0 +1,92 @@
+# Data Policy as Code — single source of truth.
+#
+# Every dataset in scope has a single record. Generators in policy/generators/
+# read this file and emit:
+#   - Snowflake masking + row-access policies (SQL DDL)
+#   - Databricks Unity Catalog GRANTs
+#   - OpenMetadata tags + ownership records
+#   - A compliance audit report (HTML)
+#
+# Anything not in this file is implicitly denied by the catch-all REVOKE step.
+
+version: 1
+
+domains:
+  - name: clinical
+    owner: data-platform@example.com
+    contact_slack: "#data-platform-clinical"
+    datasets:
+
+      - name: snowflake.prod.patient_visits
+        description: "Outpatient + inpatient encounter records, joined with admissions."
+        sensitivity: PHI
+        retention_days: 2555           # 7 years, HIPAA retention floor
+        pii_columns: [patient_name, dob, mrn, address]
+        regulated_under: [HIPAA, GDPR]
+        access:
+          - role: analyst_clinical
+            masking: hash               # SHA-256 with salt
+          - role: data_scientist
+            masking: tokenize           # reversible by tokenization service
+          - role: physician
+            masking: none
+            condition: "current_user_dept() = visit_dept"
+
+      - name: snowflake.prod.lab_results
+        description: "Laboratory results by visit_id."
+        sensitivity: PHI
+        retention_days: 2555
+        pii_columns: [mrn]
+        regulated_under: [HIPAA]
+        access:
+          - role: analyst_clinical
+            masking: hash
+          - role: physician
+            masking: none
+
+  - name: marketing
+    owner: marketing-data@example.com
+    contact_slack: "#marketing-data"
+    datasets:
+
+      - name: snowflake.prod.customers
+        description: "Marketing CRM canonical customer record."
+        sensitivity: PII
+        retention_days: 1095           # 3 years
+        pii_columns: [email, phone, full_name, address]
+        regulated_under: [GDPR, CCPA]
+        access:
+          - role: marketing_analyst
+            masking: hash
+          - role: campaign_manager
+            masking: none
+            condition: "marketing_consent = TRUE"
+
+      - name: snowflake.prod.campaign_responses
+        description: "Click + open + conversion events per customer."
+        sensitivity: PII
+        retention_days: 730            # 2 years
+        pii_columns: [customer_id]
+        regulated_under: [GDPR, CCPA]
+        access:
+          - role: marketing_analyst
+            masking: none
+          - role: data_scientist
+            masking: none
+
+  - name: finance
+    owner: finance-data@example.com
+    datasets:
+
+      - name: snowflake.prod.payments
+        description: "Transactional payments incl. card details."
+        sensitivity: PCI
+        retention_days: 3650
+        pii_columns: [card_pan, billing_address]
+        regulated_under: [PCI_DSS]
+        access:
+          - role: finance_analyst
+            masking: tokenize
+          - role: fraud_ops
+            masking: tokenize
+            condition: "fraud_flag = TRUE"
