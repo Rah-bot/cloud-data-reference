@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: silver_retail
+    schema: silver_retail
+    tables:
+      - name: fact_sales
+        loaded_at_field: order_ts
+        freshness:
+          warn_after: {count: 6, period: hour}
+          error_after: {count: 24, period: hour}
+      - name: dim_customer
+      - name: dim_product
+
+models:
+  - name: fact_sales_daily
+    description: "Daily aggregated sales at customer x product x channel grain."
+    columns:
+      - name: order_date
+        tests: [not_null]
+      - name: dim_customer_sk
+        tests: [not_null]
+      - name: dim_product_sk
+        tests: [not_null]
+      - name: gross_revenue
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: units
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"

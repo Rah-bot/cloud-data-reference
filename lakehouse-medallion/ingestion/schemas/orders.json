@@ -1,0 +1,25 @@
+{
+  "type": "struct",
+  "fields": [
+    {"name": "order_id", "type": "string", "nullable": false},
+    {"name": "customer_id", "type": "string", "nullable": false},
+    {"name": "order_ts", "type": "timestamp", "nullable": false},
+    {"name": "store_id", "type": "string", "nullable": true},
+    {"name": "channel", "type": "string", "nullable": false, "comment": "web|mobile|store"},
+    {"name": "currency", "type": "string", "nullable": false},
+    {"name": "subtotal", "type": "decimal(12,2)", "nullable": false},
+    {"name": "tax", "type": "decimal(12,2)", "nullable": false},
+    {"name": "shipping", "type": "decimal(12,2)", "nullable": false},
+    {"name": "total", "type": "decimal(12,2)", "nullable": false},
+    {"name": "status", "type": "string", "nullable": false},
+    {"name": "lines", "type": "array", "elementType": {
+      "type": "struct",
+      "fields": [
+        {"name": "line_id", "type": "string"},
+        {"name": "sku", "type": "string"},
+        {"name": "qty", "type": "int"},
+        {"name": "unit_price", "type": "decimal(12,2)"}
+      ]
+    }}
+  ]
+}

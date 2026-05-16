@@ -1,0 +1,9 @@
+pyspark==3.5.0
+delta-spark==3.0.0
+apache-airflow==2.8.1
+apache-airflow-providers-databricks==6.1.0
+apache-airflow-providers-great-expectations==0.2.7
+great-expectations==0.18.8
+dbt-databricks==1.7.3
+pytest==7.4.4
+ruff==0.1.14
