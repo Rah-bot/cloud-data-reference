@@ -1,0 +1,48 @@
+{
+  "title": "Streaming Pipeline Health",
+  "uid": "streaming-health",
+  "schemaVersion": 39,
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Kafka events per second (vehicle.events)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "rate(kafka_topic_partition_current_offset{topic=\"vehicle.events\"}[1m])"}
+      ]
+    },
+    {
+      "title": "Spark Structured Streaming — input rows/sec",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "rate(spark_streaming_inputRowsPerSecond[1m])"}
+      ]
+    },
+    {
+      "title": "Spark Structured Streaming — processing time (ms)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "spark_streaming_processedRowsPerSecond"}
+      ]
+    },
+    {
+      "title": "Consumer lag (partitions of vehicle.events)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "kafka_consumergroup_lag{topic=\"vehicle.events\"}"}
+      ]
+    },
+    {
+      "title": "Alerts emitted per minute",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "increase(kafka_topic_partition_current_offset{topic=\"vehicle.alerts\"}[1m])"}
+      ]
+    }
+  ]
+}

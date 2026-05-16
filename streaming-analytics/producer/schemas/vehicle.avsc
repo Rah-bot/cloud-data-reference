@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "VehicleEvent",
+  "namespace": "com.example.fleet",
+  "doc": "Single telemetry event emitted by a connected vehicle.",
+  "fields": [
+    {"name": "event_id", "type": "string", "doc": "ULID, globally unique"},
+    {"name": "vehicle_id", "type": "string"},
+    {"name": "driver_id", "type": ["null", "string"], "default": null},
+    {"name": "event_ts_ms", "type": "long", "doc": "Epoch millis at emission"},
+    {"name": "latitude", "type": "double"},
+    {"name": "longitude", "type": "double"},
+    {"name": "speed_kph", "type": "float"},
+    {"name": "heading_deg", "type": "float"},
+    {"name": "acceleration_ms2", "type": "float"},
+    {"name": "engine_rpm", "type": "int"},
+    {"name": "fuel_level_pct", "type": "float"},
+    {"name": "odometer_km", "type": "double"},
+    {"name": "harsh_braking", "type": "boolean", "default": false},
+    {"name": "geofence_id", "type": ["null", "string"], "default": null},
+    {"name": "schema_version", "type": "int", "default": 1}
+  ]
+}

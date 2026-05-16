@@ -1,0 +1,78 @@
+-- Snowflake setup for the fleet streaming pipeline.
+-- Run as ACCOUNTADMIN or a role with CREATE on the database.
+
+USE ROLE SYSADMIN;
+
+CREATE DATABASE IF NOT EXISTS FLEET;
+CREATE SCHEMA   IF NOT EXISTS FLEET.ANALYTICS;
+CREATE SCHEMA   IF NOT EXISTS FLEET.RAW;
+
+CREATE WAREHOUSE IF NOT EXISTS FLEET_INGEST_WH
+  WAREHOUSE_SIZE = SMALL
+  AUTO_SUSPEND = 60
+  AUTO_RESUME = TRUE
+  INITIALLY_SUSPENDED = TRUE;
+
+-- ---------------------------------------------------------------------------
+-- Target tables
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS FLEET.ANALYTICS.FLEET_KPI_MIN (
+  WINDOW_START        TIMESTAMP_NTZ,
+  WINDOW_END          TIMESTAMP_NTZ,
+  GEOFENCE_ID         STRING,
+  ACTIVE_VEHICLES     NUMBER,
+  AVG_SPEED_KPH       FLOAT,
+  MAX_SPEED_KPH       FLOAT,
+  HARSH_BRAKING_EVENTS NUMBER,
+  TOTAL_EVENTS        NUMBER,
+  INGEST_TS           TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+
+  CONSTRAINT pk_kpi_min PRIMARY KEY (WINDOW_START, GEOFENCE_ID)
+)
+CLUSTER BY (WINDOW_START);
+
+-- Raw event landing for cold-path replay queries
+CREATE TABLE IF NOT EXISTS FLEET.RAW.VEHICLE_EVENTS (
+  EVENT_ID            STRING,
+  VEHICLE_ID          STRING,
+  DRIVER_ID           STRING,
+  EVENT_TS            TIMESTAMP_NTZ,
+  LATITUDE            FLOAT,
+  LONGITUDE           FLOAT,
+  SPEED_KPH           FLOAT,
+  HEADING_DEG         FLOAT,
+  ACCELERATION_MS2    FLOAT,
+  ENGINE_RPM          NUMBER,
+  FUEL_LEVEL_PCT      FLOAT,
+  ODOMETER_KM         FLOAT,
+  HARSH_BRAKING       BOOLEAN,
+  GEOFENCE_ID         STRING,
+  SCHEMA_VERSION      NUMBER,
+  KAFKA_OFFSET        NUMBER,
+  INGEST_TS           TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+)
+CLUSTER BY (DATE(EVENT_TS), GEOFENCE_ID);
+
+-- ---------------------------------------------------------------------------
+-- Snowpipe Streaming role + grants
+-- ---------------------------------------------------------------------------
+
+USE ROLE SECURITYADMIN;
+
+CREATE ROLE IF NOT EXISTS FLEET_INGEST;
+GRANT USAGE ON WAREHOUSE FLEET_INGEST_WH TO ROLE FLEET_INGEST;
+GRANT USAGE ON DATABASE FLEET                TO ROLE FLEET_INGEST;
+GRANT USAGE ON SCHEMA FLEET.ANALYTICS        TO ROLE FLEET_INGEST;
+GRANT USAGE ON SCHEMA FLEET.RAW              TO ROLE FLEET_INGEST;
+GRANT INSERT, SELECT ON FLEET.ANALYTICS.FLEET_KPI_MIN TO ROLE FLEET_INGEST;
+GRANT INSERT, SELECT ON FLEET.RAW.VEHICLE_EVENTS      TO ROLE FLEET_INGEST;
+
+-- ---------------------------------------------------------------------------
+-- BI views — last 24h KPIs
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE VIEW FLEET.ANALYTICS.V_KPI_LAST_24H AS
+SELECT *
+FROM FLEET.ANALYTICS.FLEET_KPI_MIN
+WHERE WINDOW_START >= DATEADD(hour, -24, CURRENT_TIMESTAMP());
